@@ -1,8 +1,8 @@
 import pygame
 import random
 
-# 2.총알 쏘기 추가.
-
+# 3. 에너지 개념 및 충돌 이벤트 추가
+# 에너지 10이 0이되면 게임오버.
 
 # Pygame 초기화
 pygame.init()
@@ -30,6 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = SCREEN_WIDTH // 2
         self.rect.y = SCREEN_HEIGHT - 50
         self.speed_x = 0
+        self.energy = 10  # 에너지 추가
 
     def update(self):
         self.rect.x += self.speed_x
@@ -82,6 +83,26 @@ class Bullet(pygame.sprite.Sprite):
         if self.rect.y < 0:
             self.kill()
 
+def game_over_handler():
+    screen.fill(BLACK)
+    font = pygame.font.SysFont(None, 74)
+    text = font.render("Game Over", True, RED)
+    screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - 50))
+
+    font = pygame.font.SysFont(None, 36)
+    text = font.render("Press R to Restart", True, WHITE)
+    screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 + 10))
+
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                waiting = False
+
 # 스프라이트 그룹 생성
 player = Player()
 enemies = pygame.sprite.Group()
@@ -129,13 +150,33 @@ while running:
         enemies.add(enemy)
         all_sprites.add(enemy)
 
+    # 적과 플레이어 충돌 확인
+    hits = pygame.sprite.spritecollide(player, enemies, True)
+    for hit in hits:
+        player.energy -= 1
+        if player.energy <= 0:
+            game_over_handler()
+            # 게임 재시작
+            player = Player()
+            enemies.empty()
+            bullets.empty()
+            for i in range(10):
+                enemy = Enemy()
+                enemies.add(enemy)
+            all_sprites.empty()
+            all_sprites.add(player)
+            all_sprites.add(enemies)
+            score = 0
+
     screen.fill(BLACK)
     all_sprites.draw(screen)
 
-    # 점수 표시
+    # 점수 및 에너지 표시
     font = pygame.font.SysFont(None, 36)
     text = font.render(f'Score: {score}', True, WHITE)
     screen.blit(text, (10, 10))
+    text = font.render(f'Energy: {player.energy}', True, WHITE)
+    screen.blit(text, (10, 40))
 
     pygame.display.flip()
 
