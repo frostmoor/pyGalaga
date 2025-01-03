@@ -3,6 +3,7 @@ import random
 
 # 2.총알 쏘기 추가.
 
+
 # Pygame 초기화
 pygame.init()
 
